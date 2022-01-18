@@ -91,14 +91,12 @@ export class HTTPTunnel extends Duplex {
           reject(err);
         });
         req.on('response', (res) => {
-          console.log('polled', res.statusCode);
           if (res.statusCode === 200) {
             res.on('error', (err) => {
               console.error(err);
               resolve();
             });
             res.on('data', (chunk) => {
-              console.log('polled chunk', chunk.toString());
               this.push(chunk);
             });
             res.on('end', () => resolve());
@@ -118,7 +116,6 @@ export class HTTPTunnel extends Duplex {
       port: this.port,
       wrdrecordvisit: Date.now(),
     }
-    console.log('auth');
     try {
       const rsp = await axiosInstance.get('/tunnel', { params });
 
@@ -145,9 +142,6 @@ export class HTTPTunnel extends Duplex {
       }
       axiosInstance
         .post(`/tunnel/${this.token}/keepalive?wrdrecordvisit=${Date.now()}`)
-        .then((rsp) => {
-          console.log('keepalive', rsp.data)
-        })
         .catch(() => {
           this.isClosed = true;
           clearInterval(token);

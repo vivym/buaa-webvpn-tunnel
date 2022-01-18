@@ -69,7 +69,6 @@ export class Server {
     const httpServer = http.createServer((req, res) => {
       const { method, headers } = req;
       const url = new URL(req.url, `http://${headers.host}`);
-      console.log(method, url);
     
       if (url.pathname === '/tunnel') {
         const host = url.searchParams.get('host');
