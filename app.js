@@ -22,12 +22,13 @@ class App {
       .option('-h, --host <n>', 'local host to listen on', 'localhost')
       .option('-rp, --rport <number>', 'remote port to connect to', toInt, 22)
       .option('-rh, --rhost <n>', 'remote host to connect to', '127.0.0.1')
+      .option('--reset-cookie', 'reset cookie')
       .parse();
     this.options = program.opts();
   }
 
   async run() {
-    const client = new Client(this.options, await getCookie());
+    const client = new Client(this.options, await getCookie(this.options.resetCookie));
     client.run();
   }
 }

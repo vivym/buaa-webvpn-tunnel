@@ -3,7 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import prompt from 'prompt';
 
-export async function getCookie() {
+export async function getCookie(reset = false) {
   const homedir = os.homedir();
   const cookieDir = path.join(homedir, '.config');
   if (!fs.existsSync(cookieDir)) {
@@ -11,8 +11,15 @@ export async function getCookie() {
   }
   const cookiePath = path.join(cookieDir, 'buaa_webvpn.cookie')
 
+  if (reset) {
+    if (fs.existsSync(cookiePath)) {
+      fs.unlinkSync(cookiePath);
+    }
+  }
+
   return new Promise((resolve, reject) => {
     if (!fs.existsSync(cookiePath)) {
+
       prompt.start();
   
       prompt.get(['cookie'], (err, result) => {
