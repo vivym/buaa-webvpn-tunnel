@@ -144,7 +144,7 @@ export class HTTPTunnel extends Duplex {
         return;
       }
       axiosInstance
-        .get(`/tunnel/${this.token}/keepalive?wrdrecordvisit=${Date.now()}`)
+        .post(`/tunnel/${this.token}/keepalive?wrdrecordvisit=${Date.now()}`)
         .then((rsp) => {
           console.log('keepalive', rsp.data)
         })

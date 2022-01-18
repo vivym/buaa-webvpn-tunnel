@@ -110,7 +110,7 @@ export class Server {
         });
       } else if (url.pathname.startsWith('/tunnel/')) {
         const m = /\/tunnel\/([A-Za-z0-9\-]+)\/(\w+)/.exec(url.pathname);
-        if (!m) {
+        if (!m || method !== 'POST') {
           res.writeHead(200);
           res.end('okay');
         } else {
