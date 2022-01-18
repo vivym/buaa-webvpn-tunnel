@@ -30,7 +30,7 @@ export class HTTPTunnel extends Duplex {
         method: 'POST',
         path: `/http-23380/77726476706e69737468656265737421a1a70fce72612600305ada/tunnel/${this.token}/push?wrdrecordvisit=${Date.now()}`,
         headers: {
-          Cookie: 'wengine_vpn_ticketd_buaa_edu_cn=27d0e117f61d7212',
+          Cookie: this.cookie,
         },
       });
       req.on('error', (err) => {
