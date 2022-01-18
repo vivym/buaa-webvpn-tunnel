@@ -1,11 +1,15 @@
 import net from 'net';
-import http from 'http';
+import https from 'https';
 import { Duplex } from 'stream';
 import axios from 'axios';
 
+const cookie = '_webvpn_key=eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyIjoic3kyMDIxMTIwIiwiZ3JvdXBzIjpbMywxXSwiaWF0IjoxNjMxNjM4MjcyLCJleHAiOjE2MzE3MjQ2NzJ9.sQidtejuqM0P9bMR0bw9HumAuX2m7Ujqh2h3Mqa76Xk; webvpn_username=sy2021120%7C1631638272%7Cd7d9a12bfb9f1e2af5627e82738cba69fb2f21d1; refresh=0; show_vpn=0; wengine_vpn_ticketd_buaa_edu_cn=27d0e117f61d7212';
 const axiosInstance = axios.create({
-  baseURL: 'http://127.0.0.1:23380',
+  baseURL: 'https://d.buaa.edu.cn/http-23380/77726476706e69737468656265737421a1a70fce72612600305ada',
   timeout: 0,
+  headers: {
+    cookie: cookie,
+  },
 });
 
 export class HTTPTunnel extends Duplex {
@@ -22,11 +26,14 @@ export class HTTPTunnel extends Duplex {
 
   async postData(chunks, callback) {
     await new Promise((resolve, reject) => {
-      const req = http.request({
-        host: 'localhost',
-        port: 23380,
+      const req = https.request({
+        host: 'd.buaa.edu.cn',
+        port: 443,
         method: 'POST',
-        path: `/tunnel/${this.token}`,
+        path: `/http-23380/77726476706e69737468656265737421a1a70fce72612600305ada/tunnel/push/${this.token}/?wrdrecordvisit=${Date.now()}`,
+        headers: {
+          Cookie: cookie,
+        },
       });
       req.on('error', (err) => {
         console.error(err);
@@ -69,18 +76,38 @@ export class HTTPTunnel extends Duplex {
 
     while (this.isPolling && !this.isClosed) {
       await new Promise((resolve, reject) => {
-        http.get(`http://localhost:23380/tunnel/${this.token}`, (res) => {
+        const req = https.request({
+          host: 'd.buaa.edu.cn',
+          port: 443,
+          method: 'POST',
+          path: `/http-23380/77726476706e69737468656265737421a1a70fce72612600305ada/tunnel/pull/${this.token}/?wrdrecordvisit=${Date.now()}`,
+          headers: {
+            Cookie: cookie,
+          },
+        });
+
+        req.on('error', (err) => {
+          console.error(err);
+          reject(err);
+        });
+        req.on('response', (res) => {
+          console.log('polled', res.statusCode);
           if (res.statusCode === 200) {
             res.on('error', (err) => {
               console.error(err);
               resolve();
             });
-            res.on('data', (chunk) => this.push(chunk));
+            res.on('data', (chunk) => {
+              console.log('polled chunk', chunk.toString());
+              this.push(chunk);
+            });
             res.on('end', () => resolve());
           } else {
             reject(new Error(`HTTP status code ${res.statusCode}`));
           }
         });
+  
+        req.end();
       });
     }
   }
@@ -89,9 +116,11 @@ export class HTTPTunnel extends Duplex {
     const params = {
       host: this.host,
       port: this.port,
+      wrdrecordvisit: Date.now(),
     }
+    console.log('auth');
     try {
-      const rsp = await axios.get('http://localhost:23380/tunnel', { params });
+      const rsp = await axiosInstance.get('/tunnel', { params });
 
       if (rsp.status !== 200) {
         throw new Error(`tunnel auth failed: ${rsp.status}`);
@@ -114,10 +143,15 @@ export class HTTPTunnel extends Duplex {
         clearInterval(token);
         return;
       }
-      axiosInstance.get(`/tunnel/${this.token}/keepalive`).catch(() => {
-        this.isClosed = true;
-        clearInterval(token);
-      });
+      axiosInstance
+        .get(`/tunnel/${this.token}/keepalive?wrdrecordvisit=${Date.now()}`)
+        .then((rsp) => {
+          console.log('keepalive', rsp.data)
+        })
+        .catch(() => {
+          this.isClosed = true;
+          clearInterval(token);
+        });
     }, 1000 * 5);
   }
 

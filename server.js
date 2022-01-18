@@ -69,6 +69,7 @@ export class Server {
     const httpServer = http.createServer((req, res) => {
       const { method, headers } = req;
       const url = new URL(req.url, `http://${headers.host}`);
+      console.log(method, url);
     
       if (url.pathname === '/tunnel') {
         const host = url.searchParams.get('host');
@@ -108,23 +109,24 @@ export class Server {
           }
         });
       } else if (url.pathname.startsWith('/tunnel/')) {
-        let token = url.pathname.substring(8);
-        let isKeepAlive = false;
-        if (token.endsWith('/keepalive')) {
-          isKeepAlive = true;
-          token = token.substring(0, token.length - 10);
-        }
-        if (!this.tcpCacheMap.has(token)) {
-          res.writeHead(400, { 'Content-Type': 'text/json' });
-          res.end(JSON.stringify({
-            code: 200,
-            message: 'invalid token',
-          }));
+        const m = /\/tunnel\/([A-Za-z0-9\-]+)\/(\w+)/.exec(url.pathname);
+        if (!m) {
+          res.writeHead(200);
+          res.end('okay');
         } else {
-          const tcpCache = this.tcpCacheMap.get(token);
-          if (isKeepAlive) {
+          const token = m[1], cmd = m[2];
+          if (!this.tcpCacheMap.has(token)) {
+            res.writeHead(400, { 'Content-Type': 'text/json' });
+            res.end(JSON.stringify({
+              code: 200,
+              message: 'invalid token',
+            }));
+          } else if (cmd === 'keepalive') {
+            const tcpCache = this.tcpCacheMap.get(token);
             tcpCache.lastActiveTime = Date.now();
-          } else if (method === 'GET') {
+            res.writeHead(200);
+            res.end('okay');
+          } else if (cmd === 'pull') {
             res.writeHead(200);
             if (tcpCache.queue.length > 0) {
               tcpCache.consume(res);
@@ -135,7 +137,7 @@ export class Server {
                 res.end();
               });
             }
-          } else if (method === 'POST') {
+          } else if (cmd === 'push') {
             req.pipe(tcpCache.tcpSocket, { end: false });
             req.on('end', () => {
               res.writeHead(200);
