@@ -2,22 +2,23 @@ import net from 'net';
 import https from 'https';
 import { Duplex } from 'stream';
 import axios from 'axios';
+import qs from 'qs';
 
-const cookie = '_webvpn_key=eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyIjoic3kyMDIxMTIwIiwiZ3JvdXBzIjpbMywxXSwiaWF0IjoxNjMxNjM4MjcyLCJleHAiOjE2MzE3MjQ2NzJ9.sQidtejuqM0P9bMR0bw9HumAuX2m7Ujqh2h3Mqa76Xk; webvpn_username=sy2021120%7C1631638272%7Cd7d9a12bfb9f1e2af5627e82738cba69fb2f21d1; refresh=0; show_vpn=0; wengine_vpn_ticketd_buaa_edu_cn=27d0e117f61d7212';
 const axiosInstance = axios.create({
   baseURL: 'https://d.buaa.edu.cn/http-23380/77726476706e69737468656265737421a1a70fce72612600305ada',
   timeout: 0,
   headers: {
-    cookie: cookie,
-  },
+    Cookie: 'wengine_vpn_ticketd_buaa_edu_cn=27d0e117f61d7212'
+  }
 });
 
 export class HTTPTunnel extends Duplex {
-  constructor(host, port) {
+  constructor(host, port, cookie) {
     super();
 
     this.host = host;
     this.port = port;
+    this.cookie = cookie
 
     this.token = null;
     this.isPolling = false;
@@ -25,6 +26,7 @@ export class HTTPTunnel extends Duplex {
   }
 
   async postData(chunks, callback) {
+    console.log('this.cookie',  this.cookie, this.token);
     await new Promise((resolve, reject) => {
       const req = https.request({
         host: 'd.buaa.edu.cn',
@@ -32,7 +34,7 @@ export class HTTPTunnel extends Duplex {
         method: 'POST',
         path: `/http-23380/77726476706e69737468656265737421a1a70fce72612600305ada/tunnel/${this.token}/push?wrdrecordvisit=${Date.now()}`,
         headers: {
-          Cookie: cookie,
+          Cookie: 'wengine_vpn_ticketd_buaa_edu_cn=27d0e117f61d7212',
         },
       });
       req.on('error', (err) => {
@@ -82,7 +84,7 @@ export class HTTPTunnel extends Duplex {
           method: 'POST',
           path: `/http-23380/77726476706e69737468656265737421a1a70fce72612600305ada/tunnel/${this.token}/pull?wrdrecordvisit=${Date.now()}`,
           headers: {
-            Cookie: cookie,
+            Cookie: this.cookie,
           },
         });
 
@@ -117,16 +119,19 @@ export class HTTPTunnel extends Duplex {
       wrdrecordvisit: Date.now(),
     }
     try {
-      const rsp = await axiosInstance.get('/tunnel', { params });
+      const rsp = await axiosInstance.post(`/tunnel?${qs.stringify(params)}`);
 
       if (rsp.status !== 200) {
         throw new Error(`tunnel auth failed: ${rsp.status}`);
       }
       const { code, data } = rsp.data;
       if (code !== 0) {
-        throw new Error(`tunnel auth failed: ${code}`);
+        throw new Error(`tunnel auth failed: ${rsp.data}`);
       }
       this.token = data.token;
+      if (!this.token) {
+        throw new Error(`tunnel auth failed: no token`);
+      }
       this.keepalive();
 
     } catch (err) {
@@ -155,12 +160,14 @@ export class HTTPTunnel extends Duplex {
 }
 
 export class Client {
-  constructor({ host, port, rhost, rport }) {
+  constructor({ host, port, rhost, rport }, cookie) {
     this._host = host;
     this._port = port;
     this._rhost = rhost;
     this._rport = rport;
 
+    axiosInstance.defaults.headers.cookie = cookie;
+    this._cookie = cookie;
     this._token = null;
   }
 
@@ -168,13 +175,14 @@ export class Client {
     const tcpServer = net.createServer(async (c) => {
       console.log('connected!');
 
-      const tunnel = new HTTPTunnel(this._rhost, this._rport);
+      const tunnel = new HTTPTunnel(this._rhost, this._rport, this._cookie);
       try {
         await tunnel.auth();
       } catch (err) {
-        console.log('error occured, reset');
+        console.log('error occured, reset', err.message);
         c.end();
         tunnel.close();
+        return;
       }
 
       c.pipe(tunnel);

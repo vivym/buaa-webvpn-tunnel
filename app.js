@@ -1,5 +1,6 @@
 import { Command, InvalidArgumentError } from 'commander';
 import { Client } from './client.js';
+import { getCookie } from './cookie.js';
 
 class App {
   constructor() {
@@ -24,7 +25,7 @@ class App {
   }
 
   run() {
-    const client = new Client(this.options);
+    const client = new Client(this.options, getCookie());
     client.run();
   }
 }

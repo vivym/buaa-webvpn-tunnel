@@ -71,42 +71,48 @@ export class Server {
       const url = new URL(req.url, `http://${headers.host}`);
     
       if (url.pathname === '/tunnel') {
-        const host = url.searchParams.get('host');
-        const port = url.searchParams.get('port');
-
-        let isConnected = false;
-        const token = this.generateToken();
-        const tcpSocket = net.createConnection({ host, port }, () => {
-          this.tcpCacheMap.set(token, new TCPCache(tcpSocket));
-        });
-        tcpSocket.on('connect', () => {
-          isConnected = true;
-          res.writeHead(200, { 'Content-Type': 'text/json' });
-          res.end(JSON.stringify({
-            code: 0,
-            data: { token: token },
-          }));
-        });
-        tcpSocket.on('error', (err) => {
-          this.tcpCacheMap.delete(token);
-          if (!isConnected) {
-            res.writeHead(400, { 'Content-Type': 'text/json' });
+        if (method === 'POST') {
+          const host = url.searchParams.get('host') || 'localhost';
+          const port = url.searchParams.get('port') || '22';
+  
+          let isConnected = false;
+          const token = this.generateToken();
+          console.log('new tunnel:', host, port, token);
+          const tcpSocket = net.createConnection({ host, port }, () => {
+            this.tcpCacheMap.set(token, new TCPCache(tcpSocket));
+          });
+          tcpSocket.on('connect', () => {
+            isConnected = true;
+            res.writeHead(200, { 'Content-Type': 'text/json' });
             res.end(JSON.stringify({
-              code: 100,
-              data: { err: err.message },
+              code: 0,
+              data: { token: token },
             }));
-          }
-        });
-        tcpSocket.on('end', () => {
-          this.tcpCacheMap.delete(token);
-          if (!isConnected) {
-            res.writeHead(400, { 'Content-Type': 'text/json' });
-            res.end(JSON.stringify({
-              code: 101,
-              data: {},
-            }));
-          }
-        });
+          });
+          tcpSocket.on('error', (err) => {
+            this.tcpCacheMap.delete(token);
+            if (!isConnected) {
+              res.writeHead(400, { 'Content-Type': 'text/json' });
+              res.end(JSON.stringify({
+                code: 100,
+                data: { err: err.message },
+              }));
+            }
+          });
+          tcpSocket.on('end', () => {
+            this.tcpCacheMap.delete(token);
+            if (!isConnected) {
+              res.writeHead(400, { 'Content-Type': 'text/json' });
+              res.end(JSON.stringify({
+                code: 101,
+                data: {},
+              }));
+            }
+          });
+        } else {
+          res.writeHead(200);
+          res.end('okay');
+        }
       } else if (url.pathname.startsWith('/tunnel/')) {
         const m = /\/tunnel\/([A-Za-z0-9\-]+)\/(\w+)/.exec(url.pathname);
         if (!m || method !== 'POST') {
