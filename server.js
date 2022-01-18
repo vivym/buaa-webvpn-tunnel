@@ -127,6 +127,7 @@ export class Server {
             res.writeHead(200);
             res.end('okay');
           } else if (cmd === 'pull') {
+            const tcpCache = this.tcpCacheMap.get(token);
             res.writeHead(200);
             if (tcpCache.queue.length > 0) {
               tcpCache.consume(res);
@@ -138,6 +139,7 @@ export class Server {
               });
             }
           } else if (cmd === 'push') {
+            const tcpCache = this.tcpCacheMap.get(token);
             req.pipe(tcpCache.tcpSocket, { end: false });
             req.on('end', () => {
               res.writeHead(200);

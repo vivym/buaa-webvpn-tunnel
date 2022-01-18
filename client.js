@@ -30,7 +30,7 @@ export class HTTPTunnel extends Duplex {
         host: 'd.buaa.edu.cn',
         port: 443,
         method: 'POST',
-        path: `/http-23380/77726476706e69737468656265737421a1a70fce72612600305ada/tunnel/push/${this.token}/?wrdrecordvisit=${Date.now()}`,
+        path: `/http-23380/77726476706e69737468656265737421a1a70fce72612600305ada/tunnel/${this.token}/push?wrdrecordvisit=${Date.now()}`,
         headers: {
           Cookie: cookie,
         },
@@ -80,7 +80,7 @@ export class HTTPTunnel extends Duplex {
           host: 'd.buaa.edu.cn',
           port: 443,
           method: 'POST',
-          path: `/http-23380/77726476706e69737468656265737421a1a70fce72612600305ada/tunnel/pull/${this.token}/?wrdrecordvisit=${Date.now()}`,
+          path: `/http-23380/77726476706e69737468656265737421a1a70fce72612600305ada/tunnel/${this.token}/pull?wrdrecordvisit=${Date.now()}`,
           headers: {
             Cookie: cookie,
           },
