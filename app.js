@@ -24,8 +24,8 @@ class App {
     this.options = program.opts();
   }
 
-  run() {
-    const client = new Client(this.options, getCookie());
+  async run() {
+    const client = new Client(this.options, await getCookie());
     client.run();
   }
 }

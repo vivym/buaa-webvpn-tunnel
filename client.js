@@ -7,9 +7,6 @@ import qs from 'qs';
 const axiosInstance = axios.create({
   baseURL: 'https://d.buaa.edu.cn/http-23380/77726476706e69737468656265737421a1a70fce72612600305ada',
   timeout: 0,
-  headers: {
-    Cookie: 'wengine_vpn_ticketd_buaa_edu_cn=27d0e117f61d7212'
-  }
 });
 
 export class HTTPTunnel extends Duplex {
@@ -26,7 +23,6 @@ export class HTTPTunnel extends Duplex {
   }
 
   async postData(chunks, callback) {
-    console.log('this.cookie',  this.cookie, this.token);
     await new Promise((resolve, reject) => {
       const req = https.request({
         host: 'd.buaa.edu.cn',
