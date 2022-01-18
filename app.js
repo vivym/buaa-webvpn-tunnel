@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import { Command, InvalidArgumentError } from 'commander';
 import { Client } from './client.js';
 import { getCookie } from './cookie.js';
