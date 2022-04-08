@@ -5,7 +5,7 @@ import axios from 'axios';
 import qs from 'qs';
 
 const axiosInstance = axios.create({
-  baseURL: 'https://d.buaa.edu.cn/http-23380/77726476706e69737468656265737421a1a70fce72612600305ada',
+  baseURL: 'https://d.buaa.edu.cn/http-23380/77726476706e69737468656265737421a1a70fce72612600305add',
   timeout: 0,
 });
 
@@ -28,7 +28,7 @@ export class HTTPTunnel extends Duplex {
         host: 'd.buaa.edu.cn',
         port: 443,
         method: 'POST',
-        path: `/http-23380/77726476706e69737468656265737421a1a70fce72612600305ada/tunnel/${this.token}/push?wrdrecordvisit=${Date.now()}`,
+        path: `/http-23380/77726476706e69737468656265737421a1a70fce72612600305add/tunnel/${this.token}/push?wrdrecordvisit=${Date.now()}`,
         headers: {
           Cookie: this.cookie,
         },
@@ -78,7 +78,7 @@ export class HTTPTunnel extends Duplex {
           host: 'd.buaa.edu.cn',
           port: 443,
           method: 'POST',
-          path: `/http-23380/77726476706e69737468656265737421a1a70fce72612600305ada/tunnel/${this.token}/pull?wrdrecordvisit=${Date.now()}`,
+          path: `/http-23380/77726476706e69737468656265737421a1a70fce72612600305add/tunnel/${this.token}/pull?wrdrecordvisit=${Date.now()}`,
           headers: {
             Cookie: this.cookie,
           },
@@ -131,7 +131,7 @@ export class HTTPTunnel extends Duplex {
       this.keepalive();
 
     } catch (err) {
-      throw new Error(`Auth failed: ${err.message}`);
+      throw new Error(`Auth failed: ${err}`);
     }
   }
 
